@@ -1,5 +1,8 @@
 import numpy as np
 import plotly.graph_objs as go
+import matplotlib.pyplot as plt
+from mplsoccer.pitch import Pitch
+from time import sleep
 
 class Field3d:
     def __init__(self, data=None):
@@ -8,18 +11,21 @@ class Field3d:
         self.grid = 25
         self.xT_rows = 17
         self.xT_cols = 21
+        self.home_color = 'rgb(0, 55, 143)'
+        self.away_color = 'rgb(3, 128, 17)'
         self.custom_colorscale = [
-            [0.0, 'blue'],  # Color for the minimum value
-            [0.49, 'blue'],
+            [0.0, self.away_color],  # Color for the minimum value
+            [0.49, self.away_color],
             [0.5, 'white'], # Thinner white transition (closer to blue)
-            [0.51, 'red'],
-            [1.0, 'red']    # Color for the maximum value
+            [0.51, self.home_color],
+            [1.0, self.home_color]    # Color for the maximum value
         ]
         self.fig = go.Figure(data=[])
     
     def build_graph(self, z):
         field_length = self.field_length
         field_width = self.field_width
+
 
         grid_size = (self.xT_rows, self.xT_cols)  # number of divisions in x and y directions
 
@@ -33,10 +39,10 @@ class Field3d:
         x, y = np.meshgrid(x, y)
 
         # Create a surface plot using Plotly with decreased opacity
-        surface = go.Surface(x=x, y=y, z=z, showscale=False, cmin=-0.5, cmax=0.5, colorscale=self.custom_colorscale, opacity=0.6)
+        surface = go.Surface(x=x, y=y, z=z, showscale=False, cmin=-0.5, cmax=0.5, colorscale=self.custom_colorscale, opacity=0.6, hoverinfo='skip', hovertemplate='')
 
         # Define line marker for gridlines
-        line_marker = dict(color='white', width=2)
+        line_marker = dict(color='rgb(200,200,200)', width=2)
 
         # Add the surface to the figure
         self.fig.add_trace(surface)
@@ -48,7 +54,9 @@ class Field3d:
                 x=i, y=j, z=k,
                 mode='lines', 
                 line=line_marker, 
-                showlegend=False
+                showlegend=False,
+                hoverinfo='skip',
+                hovertemplate=''
             )
             self.fig.add_trace(surface_grid_x)
 
@@ -59,12 +67,15 @@ class Field3d:
                 x=j, y=i, z=k,
                 mode='lines', 
                 line=line_marker, 
-                showlegend=False
+                showlegend=False,
+                hoverinfo='skip',
+                hovertemplate=''
             )
             self.fig.add_trace(surface_grid_y)
 
         # Draw a rectangle in the xy plane (z = 0)
         # Define the corners of the rectangle
+        field_line_color = 'rgb(230,230,230)'
         field_x = [-field_length/2, field_length/2, field_length/2, -field_length/2, -field_length/2]
         field_y = [-field_width/2, -field_width/2, field_width/2, field_width/2, -field_width/2]
         field_z = [0, 0, 0, 0, 0]  # z = 0 for the xy plane
@@ -127,14 +138,14 @@ class Field3d:
             x=triangle_home_x,
             y=triangle_home_y,
             z=triangle_home_z,
-            color='red'      # Opacity of the triangle
+            color=self.away_color      # Opacity of the triangle
         )
 
         triangle_away = go.Mesh3d(
             x=triangle_away_x,
             y=triangle_away_y,
             z=triangle_away_z,
-            color='blue'      # Opacity of the triangle
+            color=self.home_color      # Opacity of the triangle
         )
         triangle_home = go.Cone(
             x=[-field_length/2 + 15],
@@ -143,7 +154,7 @@ class Field3d:
             u=[8],
             v=[0],
             w=[0],
-            colorscale=[[0, 'red'], [1, 'red']],
+            colorscale=[[0, self.home_color], [1, self.home_color]],
             anchor='tail',
             showscale=False  
         )
@@ -154,7 +165,7 @@ class Field3d:
             u=[-8],
             v=[0],
             w=[0],
-            colorscale=[[0, 'blue'], [1, 'blue']],
+            colorscale=[[0, self.away_color], [1, self.away_color]],
             anchor='tail',
             showscale=False  
         )
@@ -172,38 +183,39 @@ class Field3d:
 
         ##########################
         # # Field and areas
-        self.fig.add_trace(go.Scatter3d(x=field_x, y=field_y, z=field_z, showlegend=False, mode='lines', line=dict(color='black', width=4)))
-        self.fig.add_trace(go.Scatter3d(x=ag1_x, y=ag1_y, z=field_z, showlegend=False, mode='lines', line=dict(color='black', width=4)))
-        self.fig.add_trace(go.Scatter3d(x=ag2_x, y=ag2_y, z=field_z, showlegend=False, mode='lines', line=dict(color='black', width=4)))
-        self.fig.add_trace(go.Scatter3d(x=ac1_x, y=ac1_y, z=field_z, showlegend=False, mode='lines', line=dict(color='black', width=4)))
-        self.fig.add_trace(go.Scatter3d(x=ac2_x, y=ac2_y, z=field_z, showlegend=False, mode='lines', line=dict(color='black', width=4)))
+        self.fig.add_trace(go.Scatter3d(x=field_x, y=field_y, z=field_z, showlegend=False, hoverinfo='skip',  hovertemplate='', mode='lines', line=dict(color=field_line_color, width=4)))
+        self.fig.add_trace(go.Scatter3d(x=ag1_x, y=ag1_y, z=field_z, showlegend=False, hoverinfo='skip',  hovertemplate='', mode='lines', line=dict(color=field_line_color, width=4)))
+        self.fig.add_trace(go.Scatter3d(x=ag2_x, y=ag2_y, z=field_z, showlegend=False, hoverinfo='skip',  hovertemplate='', mode='lines', line=dict(color=field_line_color, width=4)))
+        self.fig.add_trace(go.Scatter3d(x=ac1_x, y=ac1_y, z=field_z, showlegend=False, hoverinfo='skip',  hovertemplate='', mode='lines', line=dict(color=field_line_color, width=4)))
+        self.fig.add_trace(go.Scatter3d(x=ac2_x, y=ac2_y, z=field_z, showlegend=False, hoverinfo='skip',  hovertemplate='', mode='lines', line=dict(color=field_line_color, width=4)))
 
         # Halfline
-        self.fig.add_trace(go.Scatter3d(x=line_x, y=line_y, z=line_z, showlegend=False, mode='lines', line=dict(color='black', width=4)))
+        self.fig.add_trace(go.Scatter3d(x=line_x, y=line_y, z=line_z, showlegend=False, hoverinfo='skip',  hovertemplate='', mode='lines', line=dict(color=field_line_color, width=4)))
 
         # Circles (middle, and area)
-        self.fig.add_trace(go.Scatter3d(x=circle_center_x, y=circle_center_y, z=circle_center_z, showlegend=False, mode='lines', line=dict(color='black', width=4)))
-        self.fig.add_trace(go.Scatter3d(x=circle_area1_x, y=circle_area1_y, z=circle_area1_z, showlegend=False, mode='lines', line=dict(color='black', width=4)))
-        self.fig.add_trace(go.Scatter3d(x=circle_area2_x, y=circle_area2_y, z=circle_area2_z, showlegend=False, mode='lines', line=dict(color='black', width=4)))
+        self.fig.add_trace(go.Scatter3d(x=circle_center_x, y=circle_center_y, z=circle_center_z, showlegend=False, hoverinfo='skip',  hovertemplate='', mode='lines', line=dict(color=field_line_color, width=4)))
+        self.fig.add_trace(go.Scatter3d(x=circle_area1_x, y=circle_area1_y, z=circle_area1_z, showlegend=False, hoverinfo='skip',  hovertemplate='', mode='lines', line=dict(color=field_line_color, width=4)))
+        self.fig.add_trace(go.Scatter3d(x=circle_area2_x, y=circle_area2_y, z=circle_area2_z, showlegend=False, hoverinfo='skip',  hovertemplate='', mode='lines', line=dict(color=field_line_color, width=4)))
 
         # # Arrow head
         self.fig.add_trace(triangle_home)
         self.fig.add_trace(triangle_away)
         # Arrow
-        self.fig.add_trace(go.Scatter3d(x=arrow1_x, y=arrow1_y, z=arrow1_z, showlegend=False, mode='lines', line=dict(color='red', width=8)))
+        self.fig.add_trace(go.Scatter3d(x=arrow1_x, y=arrow1_y, z=arrow1_z, showlegend=False, hoverinfo='skip',  hovertemplate='', mode='lines', line=dict(color=self.home_color, width=8)))
         # Arrow
-        self.fig.add_trace(go.Scatter3d(x=arrow2_x, y=arrow2_y, z=arrow2_z, showlegend=False, mode='lines', line=dict(color='blue', width=5)))
+        self.fig.add_trace(go.Scatter3d(x=arrow2_x, y=arrow2_y, z=arrow2_z, showlegend=False, hoverinfo='skip',  hovertemplate='', mode='lines', line=dict(color=self.away_color, width=5)))
         ##########################
 
 
 
         # Create a layout for the plot with aspect ratio settings
         layout = go.Layout(
-            title='3D Surface Plot of the Football Field with Shapes',
+            height=700,  # Increase the height
+            hovermode=False,
             scene=dict(
-                # xaxis_title='X (meters)',
-                # yaxis_title='Y (meters)',
-                # zaxis_title='Z (height)',
+                xaxis_showspikes=False,  # Disable spikes on x-axis
+                yaxis_showspikes=False,  # Disable spikes on y-axis
+                zaxis_showspikes=False,
                 xaxis=dict(
                     title='',
                     range=[field_length/2, -field_length/2],
@@ -235,8 +247,9 @@ class Field3d:
                     z=0.5                           # Adjust for a flat appearance
                 )
             ),
-            margin=dict(l=65, r=50, b=70, t=90),
-            scene_camera_eye=dict(x=0, y=0.8, z=0.5)
+            margin=dict(b=0, t=0),
+            scene_camera_eye=dict(x=0, y=1.4, z=0.3),
+            scene_camera_center=dict(x=0, y=0, z=-0.2)
         )
 
 
@@ -245,6 +258,7 @@ class Field3d:
         # fig = go.Figure(data=[surface], layout=layout)
         # Update the layout of the figure
         self.fig.update_layout(layout)
+        self.fig.update_layout(hovermode=False)
     
     def show(self):
         self.fig.show()
