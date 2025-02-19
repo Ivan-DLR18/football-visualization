@@ -1,8 +1,8 @@
-import numpy as np
-import plotly.graph_objs as go
-import matplotlib.pyplot as plt
-from mplsoccer.pitch import Pitch
-from time import sleep
+import numpy as np # type: ignore
+import plotly.graph_objs as go # type: ignore
+import matplotlib.pyplot as plt # type: ignore
+from mplsoccer.pitch import Pitch # type: ignore
+from time import sleep # type: ignore
 
 class Field3d:
     def __init__(self, data=None):

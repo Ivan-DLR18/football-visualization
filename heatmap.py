@@ -1,5 +1,5 @@
-import plotly.graph_objects as go
-import numpy as np
+import plotly.graph_objects as go # type: ignore
+import numpy as np # type: ignore
 
 class Heatmap:
     def __init__(self):
@@ -119,13 +119,13 @@ class Heatmap:
                 showgrid=False, 
                 zeroline=False, 
                 showticklabels=False, 
-                range=[-self.field_width/2+1, self.field_width/2+1], 
+                range=[-self.field_width/2, self.field_width/2], 
                 scaleanchor='x', 
                 scaleratio=1
                 ),
             # width=1000,
             autosize=True,
-            height=200,
+            height=170,
             margin=dict(l=0, r=0, t=0, b=0),
         )
 
