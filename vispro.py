@@ -1,6 +1,6 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
+import streamlit as st # type: ignore
+import pandas as pd # type: ignore
+import numpy as np # type: ignore
 from graph import Field3d
 from heatmap import Heatmap
 import json
@@ -18,6 +18,7 @@ player_dict = match_data['playerIdNameDictionary']
 
 touches_teamA = []
 touches_teamB = []
+touches_combined = []
 
 for event in match_data['events']:
     if event['isTouch']:
@@ -26,20 +27,21 @@ for event in match_data['events']:
         else:
             touches_teamB.append(event)
 
+for team in [touches_teamA, touches_teamB]:
+    for touch in team:
+        try:
+            touches_combined.append([touch[x] for x in ['minute', 'second', 'teamId', 'playerId']])
+        except:
+            continue
 
 
-# if "selected_player" not in st.session_state:
-#     st.session_state.selected_player = list(match_data['playerIdNameDictionary'].keys())[0]
+touches_combined_df = pd.DataFrame(touches_combined, columns=['minute', 'second', 'teamId', 'playerId'])
 
-#     touches_player = []
-#     for touch in touches_teamA:
-#         if touch['playerId'] == int(list(match_data['playerIdNameDictionary'].keys())[0]):
-#             touches_player.append([touch[x] for x in ['minute', 'second', 'teamId', 'playerId', 'x', 'y']])
-    
-#     global touches_player_df
-#     touches_player_df = pd.DataFrame(touches_player, columns=['minute', 'second', 'teamId', 'playerId', 'x', 'y'])
-#     touches_player_df['x_scaled'] = touches_player_df.x - heatmap.field_length/2
-#     touches_player_df['y_scaled'] = touches_player_df.y*0.7 - heatmap.field_width/2
+top_df = touches_combined_df['playerId'].value_counts().nlargest(10).to_frame(name='touches').reset_index()
+players_name = [match_data['playerIdNameDictionary'][str(x)] for x in top_df['playerId']]
+top_df.insert(0, 'Name', players_name)
+top_df.drop(columns=['playerId'], inplace=True)
+
 
 def update_selection():
     st.session_state.selected_player = st.session_state.player_heatmap_selection
@@ -91,5 +93,5 @@ with middle:
     st.plotly_chart(match_plot.fig, config=config, use_container_width=True)
 
 with col_right:
-    st.write('Column right')
+    st.write(top_df)
 ######################
